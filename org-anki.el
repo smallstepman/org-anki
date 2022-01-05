@@ -582,5 +582,60 @@ syntax."
          )))
      (t (message "org-anki: no note id here")))))
 
+;;;###autoload
+(defun org-anki-import-deck (name &optional buffer)
+  "Import deck with NAME to current buffer, or to BUFFER when provided.
+
+This is a best-effort command which doesn't support all of Anki's features. Its use case is to import a deck to an .org which from then on will be used as source-of-truth for the notes."
+
+  (interactive "sDeck name: ")
+  (org-anki-connect-request
+   (org-anki--body
+    "findNotes"
+    `(("query" . ,(concat "deck:" name))))
+   (lambda (ids)
+     (org-anki-connect-request
+      (org-anki--body "notesInfo" `(("notes" . ,ids)))
+      (lambda (the-result) (mapc 'org-anki--parse-note the-result))
+      (lambda (the-error)
+        (org-anki--report-error "Get deck error, received: %s" the-error))))
+   (lambda (the-error)
+     (org-anki--report-error "Get deck error, received: %s" the-error))))
+
+(defun org-anki--parse-note (note-json)
+  (cl-flet ((field (lambda (symbol &optional assoc-list)
+                     (cdr (assoc symbol (or assoc-list note-json))))))
+    (let*
+        ((type (field 'modelName))
+         (fields (field 'fields))
+         (front-back
+          (cond
+           ((equal type "Cloze")
+            `( ,(cdr (assoc 'value (cdr (assoc 'Text fields))))
+             . nil))
+           (t
+            `( ,(cdr (assoc 'value (cdr (assoc 'Front fields))))
+             . ,(cdr (assoc 'value (cdr (assoc 'Back fields))))) ))))
+
+      (message "note-json: %s" note-json)
+      (message "note: %s"
+               (make-org-anki--note
+                :maybe-id (field 'noteId)
+                :front    (car front-back)
+                :back     (cdr front-back)
+                :tags     (append (field 'tags) nil)
+                ;; :deck     deck
+                :type     type
+                :point    nil
+                )
+
+               ))))
+
+(defun org-anki-hot ()
+  (interactive)
+  (eval-buffer "org-anki.el")
+  (org-anki-import-deck "tests")
+  )
+
 (provide 'org-anki)
 ;;; org-anki.el ends here
