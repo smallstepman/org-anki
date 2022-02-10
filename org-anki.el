@@ -180,9 +180,17 @@ with result."
         (push (org-current-buffer-get-title) x)
         (string-join x " -> ")))
 
+
+(defun org-anki--has-no-content (back)
+  "Check if selected back content has picked up following heading."
+  (string-match "^\\(\\*\\)+\s" back)
+)
+
+
 (defun org-anki--note-at-point ()
   (let
-      ((maybe-id (org-entry-get nil org-anki-prop-note-id))
+      ((raw-back (org-anki--entry-content-until-any-heading))
+       (maybe-id (org-entry-get nil org-anki-prop-note-id))
        ;; (front (org-anki--string-to-html (org-entry-get nil "ITEM")))
        (front (org-anki--string-to-html (org-anki-front-card-get-heading-path)))
        (back (org-anki--back-post-processing (org-anki--string-to-html (org-anki--entry-content-until-any-heading))))
@@ -190,14 +198,16 @@ with result."
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
        (type (org-anki--find-prop org-anki-note-type org-anki-default-note-type))
        (note-start (point)))
-    (make-org-anki--note
-     :maybe-id (if (stringp maybe-id) (string-to-number maybe-id))
-     :front    front
-     :back     back
-     :tags     tags
-     :deck     deck
-     :type     type
-     :point    note-start)))
+    (if (org-anki--has-no-content raw-back)
+        nil
+      (make-org-anki--note
+            :maybe-id (if (stringp maybe-id) (string-to-number maybe-id))
+            :front    front
+            :back     back
+            :tags     tags
+            :deck     deck
+            :type     type
+            :point    note-start))))
 
 ;;; JSON payloads
 
@@ -542,7 +552,7 @@ ignored."
   (interactive)
   (with-current-buffer (or buffer (buffer-name))
     (org-anki--sync-notes
-     (org-map-entries 'org-anki--note-at-point (org-anki--get-match)))))
+     (remove nil (org-map-entries 'org-anki--note-at-point (org-anki--get-match))))))
 
 ;;;###autoload
 (defun org-anki-update-all (&optional buffer)
