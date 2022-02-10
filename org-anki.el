@@ -588,9 +588,10 @@ ignored."
   "Syncronize all entries in optional BUFFER."
   (interactive)
   (with-current-buffer (or buffer (buffer-name))
-    (org-anki--sync-notes
-     (remove nil(org-map-entries 'org-anki--note-at-point (org-anki--get-match))))
-     (org-anki--sync-notes (org-anki--note-at-point2))))
+    (save-excursion
+      (goto-char (point-min))
+      (org-anki--sync-notes (cons (org-anki--note-at-point2) '())))
+    (org-anki--sync-notes (remove nil(org-map-entries 'org-anki--note-at-point (org-anki--get-match))))))
 
 ;;;###autoload
 (defun org-anki-update-all (&optional buffer)
