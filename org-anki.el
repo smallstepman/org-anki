@@ -202,12 +202,14 @@ with result."
         :initial-value note-tags
         :from-end t))))
 
-
+(defun org-anki--get-front (fn--get-path)
+  (let ((question (org-entry-get nil org-anki-question)))
+  (if (or (eq nil question) (string= "" question)) (fn--get-path) question)))
 
 (defun org-anki--note-at-point2 ()
   (let
       ((maybe-id (org-entry-get nil org-anki-prop-note-id))
-       (front (org-anki--string-to-html (org-entry-get (org-current-buffer-get-title) org-anki-question)))
+       (front (org-anki--string-to-html (org-anki--get-front 'org-current-buffer-get-title)))
        (back (org-anki--back-post-processing (org-anki--string-to-html (get-top-level-content))))
        (tags (org-anki--get-tags))
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
@@ -227,7 +229,7 @@ with result."
       ((raw-back (org-anki--entry-content-until-any-heading))
        (maybe-id (org-entry-get nil org-anki-prop-note-id))
        ;; (front (org-anki--string-to-html (org-entry-get nil "ITEM")))
-       (front (org-anki--string-to-html (org-entry-get (org-anki-front-card-get-heading-path) org-anki-question)))
+       (front (org-anki--string-to-html (org-anki--get-front 'org-anki-front-card-get-heading-path)))
        (back (org-anki--back-post-processing (org-anki--string-to-html (org-anki--entry-content-until-any-heading))))
        (tags (org-anki--get-tags))
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
