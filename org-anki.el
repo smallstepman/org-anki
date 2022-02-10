@@ -176,10 +176,13 @@ with result."
         (push (org-entry-get nil "ITEM") x)
         (org-element-map (org-element-lineage (org-element-at-point)) 'headline
                         (lambda (hl) (push (org-element-property :raw-value hl) x)))
-
         (push (org-current-buffer-get-title) x)
         (string-join x " -> ")))
 
+(defun get-top-level-content ()
+    (nth 2 (nth 0 (org-element-map (org-element-parse-buffer) 'paragraph
+        (lambda (paragraph) (org-entry-get nil "ITEM") paragraph))))
+)
 
 (defun org-anki--has-no-content (back)
   "Check if selected back content has picked up following heading."
@@ -191,9 +194,8 @@ with result."
   (let
       ((raw-back (org-anki--entry-content-until-any-heading))
        (maybe-id (org-entry-get nil org-anki-prop-note-id))
-       ;; (front (org-anki--string-to-html (org-entry-get nil "ITEM")))
        (front (org-anki--string-to-html (org-anki-front-card-get-heading-path)))
-       (back (org-anki--back-post-processing (org-anki--string-to-html (org-anki--entry-content-until-any-heading))))
+       (back (org-anki--back-post-processing (org-anki--string-to-html (get-top-level-content))))
        (tags (org-anki--get-tags))
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
        (type (org-anki--find-prop org-anki-note-type org-anki-default-note-type))
