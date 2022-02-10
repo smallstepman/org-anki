@@ -39,7 +39,6 @@
 (require 'promise)
 (require 'request)
 (require 'thunk)
-(require 'vulpea)
 
 ;; Constants
 
@@ -194,12 +193,13 @@ with result."
   (save-excursion
     (goto-char (point-min))
 
-    (let ((note (vulpea-db-get-by-id (org-roam-id-at-point)))
-          (org-dir (replace-regexp-in-string "~" (getenv "HOME") org-roam-directory)))
+    (let ((note-tags (org-roam-node-tags (org-roam-node-from-id (org-entry-get nil "ID"))))
+          (org-dir (replace-regexp-in-string "~" (getenv "HOME") org-roam-directory))
+          (note-path (org-roam-node-file (org-roam-node-from-id (org-entry-get nil "ID")))))
 
     (reduce #'cons
-        (butlast (split-string (replace-regexp-in-string org-dir "" (vulpea-note-path note)) "/"))
-        :initial-value (vulpea-note-tags note)
+        (butlast (split-string (replace-regexp-in-string org-dir "" note-path) "/"))
+        :initial-value note-tags
         :from-end t))))
 
 
