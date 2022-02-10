@@ -184,6 +184,24 @@ with result."
         (lambda (paragraph) (org-entry-get nil "ITEM") paragraph))))
 )
 
+(defun org-anki--note-at-point2 ()
+  (let
+      ((maybe-id (org-entry-get nil org-anki-prop-note-id))
+       (front (org-anki--string-to-html (org-current-buffer-get-title)))
+       (back (org-anki--back-post-processing (org-anki--string-to-html (get-top-level-content))))
+       (tags (org-anki--get-tags))
+       (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
+       (type (org-anki--find-prop org-anki-note-type org-anki-default-note-type))
+       (note-start (point)))
+    (make-org-anki--note
+     :maybe-id (if (stringp maybe-id) (string-to-number maybe-id))
+     :front    front
+     :back     back
+     :tags     tags
+     :deck     deck
+     :type     type
+     :point    note-start)))
+
 (defun org-anki--note-at-point ()
   (let
       ((maybe-id (org-entry-get nil org-anki-prop-note-id))
@@ -545,7 +563,8 @@ ignored."
   (interactive)
   (with-current-buffer (or buffer (buffer-name))
     (org-anki--sync-notes
-     (org-map-entries 'org-anki--note-at-point (org-anki--get-match)))))
+     (org-map-entries 'org-anki--note-at-point (org-anki--get-match)))
+     (org-anki--sync-notes (org-anki--note-at-point2))))
 
 ;;;###autoload
 (defun org-anki-update-all (&optional buffer)
