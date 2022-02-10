@@ -39,6 +39,7 @@
 (require 'promise)
 (require 'request)
 (require 'thunk)
+(require 'vulpea)
 
 ;; Constants
 
@@ -46,8 +47,8 @@
 (defconst org-anki-prop-deck "ANKI_DECK")
 (defconst org-anki-match "ANKI_MATCH")
 (defconst org-anki-note-type "ANKI_NOTE_TYPE")
+(defconst org-anki-question "ANKI_QUESTION")
 
-;; Customizable variables
 
 (defcustom org-anki-default-deck nil
   "Default deck name if none is set on the org item nor as global
@@ -189,10 +190,24 @@ with result."
   (string-match "^\\(\\*\\)+\s" back)
 )
 
+(defun org-anki--get-org-roam-tags ()
+  (save-excursion
+    (goto-char (point-min))
+
+    (let ((note (vulpea-db-get-by-id (org-roam-id-at-point)))
+          (org-dir (replace-regexp-in-string "~" (getenv "HOME") org-roam-directory)))
+
+    (reduce #'cons
+        (butlast (split-string (replace-regexp-in-string org-dir "" (vulpea-note-path note)) "/"))
+        :initial-value (vulpea-note-tags note)
+        :from-end t))))
+
+
+
 (defun org-anki--note-at-point2 ()
   (let
       ((maybe-id (org-entry-get nil org-anki-prop-note-id))
-       (front (org-anki--string-to-html (org-current-buffer-get-title)))
+       (front (org-anki--string-to-html (org-entry-get (org-current-buffer-get-title) org-anki-question)))
        (back (org-anki--back-post-processing (org-anki--string-to-html (get-top-level-content))))
        (tags (org-anki--get-tags))
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
@@ -212,7 +227,7 @@ with result."
       ((raw-back (org-anki--entry-content-until-any-heading))
        (maybe-id (org-entry-get nil org-anki-prop-note-id))
        ;; (front (org-anki--string-to-html (org-entry-get nil "ITEM")))
-       (front (org-anki--string-to-html (org-anki-front-card-get-heading-path)))
+       (front (org-anki--string-to-html (org-entry-get (org-anki-front-card-get-heading-path) org-anki-question)))
        (back (org-anki--back-post-processing (org-anki--string-to-html (org-anki--entry-content-until-any-heading))))
        (tags (org-anki--get-tags))
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
