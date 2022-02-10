@@ -204,7 +204,7 @@ with result."
 
 (defun org-anki--get-front (fn--get-path)
   (let ((question (org-entry-get nil org-anki-question)))
-  (if (or (eq nil question) (string= "" question)) (fn--get-path) question)))
+  (if (or (eq nil question) (string= "" question)) (funcall fn--get-path) question)))
 
 (defun org-anki--note-at-point2 ()
   (let
