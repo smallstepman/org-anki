@@ -179,7 +179,7 @@ with result."
         (push (org-current-buffer-get-title) x)
         (string-join x " -> ")))
 
-(defun get-top-level-content ()
+(defun org-anki--get-top-level-content ()
     (nth 2 (nth 0 (org-element-map (org-element-parse-buffer) 'paragraph
         (lambda (paragraph) (org-entry-get nil "ITEM") paragraph))))
 )
@@ -205,7 +205,7 @@ with result."
   (let
       ((maybe-id (org-entry-get nil org-anki-prop-note-id))
        (front (org-anki--string-to-html (org-anki--get-front 'org-current-buffer-get-title)))
-       (back (org-anki--back-post-processing (org-anki--string-to-html (get-top-level-content))))
+       (back (org-anki--back-post-processing (org-anki--string-to-html (org-anki--get-top-level-content))))
        (tags (org-anki--get-org-roam-tags))
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
        (type (org-anki--find-prop org-anki-note-type org-anki-default-note-type))
@@ -576,15 +576,22 @@ ignored."
   (org-anki--sync-notes (cons (org-anki--note-at-point) nil)))
 
 ;;;###autoload
+(defun org-anki-sync-top ()
+  ;; :: IO ()
+  "Synchronize top entry."
+  (org-anki--sync-notes (cons (org-anki--note-at-point2) '())))
+
+;;;###autoload
 (defun org-anki-sync-all (&optional buffer)
   ;; :: Maybe Buffer -> IO ()
   "Syncronize all entries in optional BUFFER."
   (interactive)
   (with-current-buffer (or buffer (buffer-name))
     ;; (save-excursion
-      (goto-char (point-min))
-       (org-anki--sync-notes (cons (org-anki--note-at-point2) '()))
-      (org-anki--sync-notes (remove nil(org-map-entries 'org-anki--note-at-point (org-anki--get-match))))))
+    ;;   (goto-char (point-min))
+       (org-anki--sync-notes (remove nil(org-map-entries 'org-anki--note-at-point (org-anki--get-match))))
+       ;; (org-anki--sync-notes (cons (org-anki--note-at-point2) '()))
+       ))
 
 ;;;###autoload
 (defun org-anki-update-all (&optional buffer)
