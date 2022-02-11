@@ -325,6 +325,10 @@ ignored."
     (org-anki--body "removeTags" `(("notes" ,note-id) ("tags" . ,tags_)))))
 
 ;; org-mode
+(defun org-anki--extract-paragraph-content (section)
+  (let ((properties "\\:PROPERTIES:\\(.*\n\\)*:END:\n")
+        (heading "^\\(\*\\)+\s.*\n"))
+   (replace-regexp-in-string heading "" (replace-regexp-in-string properties "" section))))
 
 (defun org-anki--entry-content-until-any-heading ()
   "Get entry content until any next heading."
@@ -332,15 +336,10 @@ ignored."
   (save-excursion
     ;; Jump to beginning of entry
     (goto-char (org-entry-beginning-position)) ;; was: (re-search-backward "^\\*+ .*\n")
-    ;; Skip heading
-    (re-search-forward ".*\n")
-    (if (looking-at "^\\(\\*\\)+\s")
-        ""
-        (let ((from (point))
+        (org-anki--extract-paragraph-content
+          (let ((from (point))
                 (to (progn (outline-next-visible-heading 1) (point))))
-        ;; Possibly skip property block until end of entry
-        (re-search-forward "\\:PROPERTIES:\\(.*\n\\)*:END:" (org-entry-end-position) t)
-        (buffer-substring-no-properties from to)))))
+            (buffer-substring-no-properties from to)))))
 
 (defun org-anki--string-to-html (string)
   "Convert STRING (org element heading or content) to html."
