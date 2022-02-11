@@ -334,12 +334,13 @@ ignored."
     (goto-char (org-entry-beginning-position)) ;; was: (re-search-backward "^\\*+ .*\n")
     ;; Skip heading
     (re-search-forward ".*\n")
+    ;; Possibly skip property block until end of entry
+    (re-search-forward "^\\:PROPERTIES:\\(.*\n\\)*:END:" (org-entry-end-position) t)
+    (re-search-forward "^\n" nil t)
     (if (looking-at "^\\(\\*\\)+\s")
         ""
         (let ((from (point))
                 (to (progn (outline-next-visible-heading 1) (point))))
-        ;; Possibly skip property block until end of entry
-        (re-search-forward "\\:PROPERTIES:\\(.*\n\\)*:END:" (org-entry-end-position) t)
         (buffer-substring-no-properties from to)))))
 
 (defun org-anki--string-to-html (string)
