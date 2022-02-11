@@ -335,9 +335,9 @@ ignored."
     ;; Skip heading
     (re-search-forward ".*\n")
     ;; Possibly skip property block until end of entry
-    (re-search-forward "^\\:PROPERTIES:\\(.*\n\\)*:END:" (org-entry-end-position) t)
-    (re-search-forward "^\n" nil t)
-    (if (looking-at "^\\(\\*\\)+\s")
+    (re-search-forward ":PROPERTIES:\\(.*\n\\)*:END:\n" (org-entry-end-position) t)
+    ;; (re-search-forward "\n" nil t)
+    (if (looking-at "\\(\*\\)+\s")
         ""
         (let ((from (point))
                 (to (progn (outline-next-visible-heading 1) (point))))
