@@ -184,11 +184,6 @@ with result."
         (lambda (paragraph) (org-entry-get nil "ITEM") paragraph))))
 )
 
-(defun org-anki--has-no-content (back)
-  "Check if selected back content has picked up following heading."
-  (string-match "^\\(\\*\\)+\s" back)
-)
-
 (defun org-anki--get-org-roam-tags ()
   (save-excursion
     (goto-char (point-min))
@@ -226,21 +221,20 @@ with result."
 
 (defun org-anki--note-at-point ()
   (let
-      ((raw-back (org-anki--entry-content-until-any-heading))
-       (maybe-id (org-entry-get nil org-anki-prop-note-id))
+      ((maybe-id (org-entry-get nil org-anki-prop-note-id))
        ;; (front (org-anki--string-to-html (org-entry-get nil "ITEM")))
        (front (org-anki--string-to-html (org-anki--get-front 'org-anki-front-card-get-heading-path)))
-       (back (org-anki--back-post-processing (org-anki--string-to-html (org-anki--entry-content-until-any-heading))))
+       (back (org-anki--entry-content-until-any-heading))
        (tags (org-anki--get-tags))
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
        (type (org-anki--find-prop org-anki-note-type org-anki-default-note-type))
        (note-start (point)))
-    (if (org-anki--has-no-content raw-back)
+    (if (string= "" back)
         nil
       (make-org-anki--note
             :maybe-id (if (stringp maybe-id) (string-to-number maybe-id))
             :front    front
-            :back     back
+            :back    (org-anki--back-post-processing (org-anki--string-to-html back))
             :tags     tags
             :deck     deck
             :type     type
@@ -341,13 +335,13 @@ ignored."
     (goto-char (org-entry-beginning-position)) ;; was: (re-search-backward "^\\*+ .*\n")
     ;; Skip heading
     (re-search-forward ".*\n")
-    ;; Possibly skip property block until end of entry
-    (re-search-forward ":properties:\\(.*\n\\)*:end:" (org-entry-end-position) t)
-    ;; Get entry content
-    (let ((from (point))
-          (to (progn (outline-next-visible-heading 1) (point))))
-      (buffer-substring-no-properties from to)
-      )))
+    (if (looking-at "^\\(\\*\\)+\s")
+        ""
+        (let ((from (point))
+                (to (progn (outline-next-visible-heading 1) (point))))
+        ;; Possibly skip property block until end of entry
+        (re-search-forward "\\:PROPERTIES:\\(.*\n\\)*:END:" (org-entry-end-position) t)
+        (buffer-substring-no-properties from to)))))
 
 (defun org-anki--string-to-html (string)
   "Convert STRING (org element heading or content) to html."
