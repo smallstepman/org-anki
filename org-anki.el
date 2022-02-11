@@ -188,13 +188,13 @@ with result."
   (save-excursion
     (goto-char (point-min))
 
-    (let ((note-tags (org-roam-node-tags (org-roam-node-from-id (org-entry-get nil "ID"))))
+    (let ((node-tags (org-roam-node-tags (org-roam-node-from-id (org-entry-get nil "ID"))))
           (org-dir (replace-regexp-in-string "~" (getenv "HOME") org-roam-directory))
-          (note-path (org-roam-node-file (org-roam-node-from-id (org-entry-get nil "ID")))))
+          (node-path (org-roam-node-file (org-roam-node-from-id (org-entry-get nil "ID")))))
 
     (reduce #'cons
-        (butlast (split-string (replace-regexp-in-string org-dir "" note-path) "/"))
-        :initial-value note-tags
+        (butlast (split-string (replace-regexp-in-string org-dir "" node-path) "/"))
+        :initial-value node-tags
         :from-end t))))
 
 (defun org-anki--get-front (fn--get-path)
@@ -206,7 +206,7 @@ with result."
       ((maybe-id (org-entry-get nil org-anki-prop-note-id))
        (front (org-anki--string-to-html (org-anki--get-front 'org-current-buffer-get-title)))
        (back (org-anki--back-post-processing (org-anki--string-to-html (get-top-level-content))))
-       (tags (org-anki--get-tags))
+       (tags (org-anki--get-org-roam-tags))
        (deck (org-anki--find-prop org-anki-prop-deck org-anki-default-deck))
        (type (org-anki--find-prop org-anki-note-type org-anki-default-note-type))
        (note-start (point)))
@@ -222,7 +222,6 @@ with result."
 (defun org-anki--note-at-point ()
   (let
       ((maybe-id (org-entry-get nil org-anki-prop-note-id))
-       ;; (front (org-anki--string-to-html (org-entry-get nil "ITEM")))
        (front (org-anki--string-to-html (org-anki--get-front 'org-anki-front-card-get-heading-path)))
        (back (org-anki--entry-content-until-any-heading))
        (tags (org-anki--get-tags))
@@ -582,10 +581,10 @@ ignored."
   "Syncronize all entries in optional BUFFER."
   (interactive)
   (with-current-buffer (or buffer (buffer-name))
-    (save-excursion
+    ;; (save-excursion
       (goto-char (point-min))
-      (org-anki--sync-notes (cons (org-anki--note-at-point2) '())))
-    (org-anki--sync-notes (remove nil(org-map-entries 'org-anki--note-at-point (org-anki--get-match))))))
+       (org-anki--sync-notes (cons (org-anki--note-at-point2) '()))
+      (org-anki--sync-notes (remove nil(org-map-entries 'org-anki--note-at-point (org-anki--get-match))))))
 
 ;;;###autoload
 (defun org-anki-update-all (&optional buffer)
