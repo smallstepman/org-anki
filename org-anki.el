@@ -177,7 +177,7 @@ with result."
         (org-element-map (org-element-lineage (org-element-at-point)) 'headline
                         (lambda (hl) (push (org-element-property :raw-value hl) x)))
         (push (org-current-buffer-get-title) x)
-        (string-join x " -> ")))
+        (string-join x " → ")))
 
 (defun org-anki--get-top-level-content ()
     (nth 2 (nth 0 (org-element-map (org-element-parse-buffer) 'paragraph
